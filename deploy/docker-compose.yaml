@@ -1,0 +1,16 @@
+version: '3.6'
+
+services:
+  findmystarbucks.web:
+    container_name: findmystarbucks.web
+    build: ../front
+    ports:
+      - "${HTTP_PORT}:${HTTP_PORT}"
+    image: findmystarbucks.client:${VERSION}
+
+  findmystarbucks.api:
+    container_name: findmystarbucks.api
+    build: ../kostack
+    ports: 
+      - "${API_PORT}:${API_PORT}"
+    image: kickpunch.auth.server:${VERSION}
