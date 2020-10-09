@@ -1,26 +1,38 @@
+require('dotenv').config();
+
 const Koa = require('koa');
 const Router = require('koa-router');
 
 const app = new Koa();
 const router = new Router();
+const api = require('./api');
 
 
-router.get('/', (ctx, next) => {
-    ctx.body = 'Home';
-})
+const mongoose = require('mongoose');
 
-router.get('/about', (ctx, next) => {
-    ctx.body = 'Intro';
-})
+/* Mongo DB Connection */
 
-router.get('/about/:name', (ctx, next) => {
-    const { name } = ctx.params;
-    ctx.body = name + "'s Intro";
-})
+mongoose.Promise = global.Promise;
+
+//Mongo DB Connect
+mongoose.connect(process.env.MONGO_URI, {
+   useUnifiedTopology: true,
+   useNewUrlParser: true,
+}).then(
+    (response) => {
+        console.log('✅ Successfully connected to MongoDB.')
+    }
+).catch( e => {console.error(e);});
+
+const port = process.env.PORT || 4000;
+
+router.use('/api', api.routes());
+
+
 
 app.use(router.routes());
 app.use(router.allowedMethods());
 
 app.listen(4000, ()=> {
-    console.log('FMS Server is listening to port 4000');
+    console.log('✅ FMS Server is listening to port 4000');
 })
