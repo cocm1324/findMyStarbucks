@@ -1,0 +1,17 @@
+{
+  "name": "fms-server",
+  "version": "1.0.0",
+  "description": "Find My Starbucks Service",
+  "main": "index.js",
+  "repository": "https://github.com/cocm1324/findMyStarbucks",
+  "author": "aota18",
+  "license": "MIT",
+  "scripts": {
+    "start": "node src",
+    "start:dev": "nodemon --watch src/ src/index.js"
+  },
+  "dependencies": {
+    "koa": "^2.13.0",
+    "koa-router": "^9.4.0"
+  }
+}
