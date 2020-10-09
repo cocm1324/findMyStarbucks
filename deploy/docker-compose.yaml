@@ -6,11 +6,11 @@ services:
     build: ../front
     ports:
       - "${HTTP_PORT}:${HTTP_PORT}"
-    image: findmystarbucks.client:${VERSION}
+    image: findmystarbucks.web:${VERSION}
 
   findmystarbucks.api:
     container_name: findmystarbucks.api
     build: ../kostack
     ports: 
       - "${API_PORT}:${API_PORT}"
-    image: kickpunch.auth.server:${VERSION}
+    image: findmystarbucks.api:${VERSION}
