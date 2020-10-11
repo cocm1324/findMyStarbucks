@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const Koa = require('koa')
 const app = new Koa();
+const PORT = 5000;
 
 const scheduler = require('./scheduler');
 
@@ -79,6 +80,6 @@ const mergeGPSLocation = async(dataList) => {
 
 scheduler.fetchStart();
 
-app.listen(4000, () => {
-    console.log('✅ API Server is listening to port 4000');
+app.listen(PORT, () => {
+    console.log('✅ API Server is listening to port' + PORT);
 })
