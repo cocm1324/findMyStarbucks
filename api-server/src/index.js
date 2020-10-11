@@ -1,87 +1,83 @@
+require('dotenv').config();
+
 const Koa = require('koa')
-const FormData = require('FormData');
-const fs = require('fs');
 const app = new Koa();
 
-const axios = require('axios');
+const scheduler = require('./scheduler');
+
+/* For CSV to Json */
+const csvjson = require('csvjson');
+const readFileSync = require('fs').readFileSync;
+const Iconv = require('iconv').Iconv;
+const encode = new Iconv('utf-8', 'euc-kr');
+
+const geocodingAPIURL = 'https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode';
 
 
-const data = {
-    'ins_lat':'37.56682', 
-    'ins_lng':'126.97865',
-    'p_sido_cd':'01',
-    'p_gugun_cd':'',  
-    'in_biz_cd':'',
-    'set_date':'',
-    'iend':'1000',
-}
+/* CSV to JSON - Universities In Seoul */
 
-let form = new URLSearchParams();
-
-for (const [key, value] of Object.entries(data)){
-    form.append(key, value);
-}
-
-let fetchedData;
-
-const extract = (obj, ...keys) => {
-    const newObject = Object.assign({});
-    Object.keys(obj).forEach((key) => {
-        if(keys.includes(key)){
-            newObject[key] = obj[key];
-            delete obj[key];
-        }
-    });
-    return newObject;
-}
-
-const fetchData = async () => {
-    try {
-        fetchedData = await axios.post('https://www.starbucks.co.kr/store/getStore.do', form).then(function (response) {
-        
-        const storeList = response.data.list;
-        const stores = storeList.map(store => {
-
-            return extract(store, 
-                's_name',
-                'addr',
-                'doro_address',
-                'gugun_code',
-                'gugun_name',
-                'lat',
-                'lot',
-                'open_dt',
-                'sido_code',
-                'sido_name',
-                'tel',
-                's_code',
-            );
+const addressToGPSLocation = async (addr) => {
+    try{
+        const returnData = await axios({
+            method: 'get',
+            url: geocodingAPIURL,
+            headers: {
+                'X-NCP-APIGW-API-KEY-ID': process.env.NAVER_CLIENT_ID,
+                'X-NCP-APIGW-API-KEY': process.env.NAVER_CLIENT_SECRET
+            },
+            params: {
+                query: addr
+            }
         });
 
-        fs.writeFile('storeData', JSON.stringify(stores), function(err){
-            if(err) return console.log(err);
-            console.log('✅ File Saved!');
-        })
-        
-        })
-        .catch(function (response) {
-            //handle error
-            console.error(response);
-        });
-
-    } catch (e) {
-        console.error(e);
+        //console.log(returnData)
+            const addressData = returnData.data.addresses[0];
+            const lat = addressData.x;
+            const lgt = addressData.y;
+            return {lat, lgt};
+      
+    }catch(e){
+        console.log(e);
     }
 }
 
+let univList=[];
+let subwayList=[];
 
-const schedule = require('node-schedule');
+function getListfromFile(filePath){
+    let fileData = readFileSync(filePath, 'utf-8');
+    encode.convert(fileData)
+    dataList = csvjson.toObject(fileData);
 
-let rule = new schedule.RecurrenceRule();
-rule.minute = 20;
+    return dataList;
+}
 
-let fetchStores = schedule.scheduleJob(rule, fetchData);
+univList = getListfromFile('/Users/danielseo/dev/findMyStarbucks/api-server/data/university_seoul.csv');
+subwayList = getListfromFile('/Users/danielseo/dev/findMyStarbucks/api-server/data/metro2_seoul.csv');
 
+console.log(univList.length);
+
+const mergeGPSLocation = async(dataList) => {
+    for(let i=0; i<dataList.length; i++){
+        try{
+            let gpsLocation = await addressToGPSLocation(dataList[i].address);
+            dataList[i].lat = gpsLocation.lat;
+            dataList[i].lgt = gpsLocation.lgt;
+        }catch(e){
+            console.log(e);
+        }
+    }
+
+    return dataList;
+}
+
+//addressToGPSLocation('서울특별시 중구 서소문로 지하 127 (서소문동) (2호선 시청역)');
+
+// mergeGPSLocation(univList).then(() => {
+//     console.log(univList);
+// });
+
+scheduler.fetchStart();
 
 app.listen(4000, () => {
     console.log('✅ API Server is listening to port 4000');
