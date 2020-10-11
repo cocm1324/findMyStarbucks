@@ -1,2 +1,2 @@
-cd ../front
+cd ../client
 ./build.sh
