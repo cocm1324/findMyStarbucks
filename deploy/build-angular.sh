@@ -1,2 +1,0 @@
-cd ../front
-./build.sh

@@ -1,12 +1,12 @@
 version: '3.6'
 
 services:
-  findmystarbucks.web:
-    container_name: findmystarbucks.web
-    build: ../front
+  findmystarbucks.client:
+    container_name: findmystarbucks.client
+    build: ../client
     ports:
       - "${HTTP_PORT}:${HTTP_PORT}"
-    image: findmystarbucks.web:${VERSION}
+    image: findmystarbucks.client:${VERSION}
 
   findmystarbucks.api:
     container_name: findmystarbucks.api
